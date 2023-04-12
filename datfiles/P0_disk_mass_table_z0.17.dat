@@ -1,0 +1,2 @@
+method halo_num Rvir[kpc] Mvir[Msol] Mgas[Msol] Mstar[Msol] Mcgmgas[Msol] Mcgmgas/Mgas
+pynbody 1 273.4 9.55e+11 1.07e+11 4.96e+10 9.12e+10 0.8561

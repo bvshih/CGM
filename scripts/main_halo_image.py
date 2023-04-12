@@ -34,14 +34,14 @@ cool_dense_gas = h1.g[temp_filt & rho_filt]
 # plotting
 
 fig, ax = plt.subplots()
-sph.image(cool_dense_gas, qty='rho', units = 'amu cm**-3',  vmin=1e-5, width = '30 kpc', cmap='PuBu', subplot = ax) 
+sph.image(cool_dense_gas, qty='rho', units = 'amu cm**-3',  vmin=1e-5, width = '280 kpc', cmap='PuBu', subplot = ax) 
 
-plt.savefig('/scratch/08263/tg875625/CGM/plots/h1_faceon_z0.17.pdf')
+plt.savefig('/scratch/08263/tg875625/CGM/plots/h1_faceon_rvir_z0.17.pdf')
 
 
 # side on 
 pynbody.analysis.angmom.sideon(h1, cen=(0,0,0))
 
 fig, ax = plt.subplots()
-sph.image(cool_dense_gas, qty='rho', units='amu cm**-3', vmin=1e-5, width = '30 kpc', cmap='PuBu', subplot = ax) 
-plt.savefig('/scratch/08263/tg875625/CGM/plots/h1_sideon_z0.17.pdf')
+sph.image(cool_dense_gas, qty='rho', units='amu cm**-3', vmin=1e-5, width = '280 kpc', cmap='PuBu', subplot = ax) 
+plt.savefig('/scratch/08263/tg875625/CGM/plots/h1_sideon_rvir_z0.17.pdf')
