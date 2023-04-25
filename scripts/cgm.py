@@ -21,10 +21,10 @@ def isolate_cgm(sim_fn, return_sim = False):
     disk = pynbody.filt.Disc(rdisk, height, cen=(0,0,0))  
 
     # filter current halo to remove disk
-    halo_cgm = h1[~disk] 
+    cgm_faceon = h1[~disk] 
 
     print('removed disc of radius', rdisk, 'and height', height)
     if return_sim:
-        return halo_cgm, s, h1 
+        return cgm_faceon, s, h1 
     else:
-        return halo_cgm
+        return cgm_faceon
