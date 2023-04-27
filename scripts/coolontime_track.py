@@ -13,10 +13,10 @@ def select_coolontimes(sim, time):
     print('coolontime particle selection complete')
     return selected_gas
 
-def get_particles(sim1_fn, sim2_fn, return_halos=True, return_sim=True):
+def get_p1(sim1_fn, sim2_fn, return_halos=True, return_sim=True):
     '''
     sim2 is the previous timestep of sim1
-    returns the particles in sim1 and sim2
+    returns the p1 in sim1 and sim2
     '''
 
     # get cgm of sim 1
@@ -42,10 +42,10 @@ def get_particles(sim1_fn, sim2_fn, return_halos=True, return_sim=True):
     # coolontime cut
     sim1_p = select_coolontimes(sim1_cgm, sim2_time)
 
-    # find progenitors of selected particles
+    # track selected particles
     sim2_p = b(sim1_p)
     
-    print('progenitors found')
+    print('p2 found')
 
     results = [sim1_p, sim2_p]
     if return_halos:
@@ -62,21 +62,21 @@ def distance(x,y,z):
     # coordinates should be from centered sim already 
     return np.sqrt(x**2+y**2+z**2)
 
-def calculate_r(particles):
-    r = [distance(particles['x'][i], particles['y'][i], particles['z'][i]) for i in range(len(particles))]
+def calculate_r(p1):
+    r = [distance(p1['x'][i], p1['y'][i], p1['z'][i]) for i in range(len(p1))]
     return r 
     
 
-def radial_dist_plot(particles, progenitors, out_fn):
+def radial_dist_plot(p1, p2, out_fn):
     fig, ax = plt.subplots(2)
 
     rvir = 300
     disk_height = 5
     bins = np.linspace(0, rvir, num = rvir/disk_height)
 
-    ax[0].hist(particles, bins = bins, alpha = 0.5, color='slateblue')
-    ax[1].hist(progenitors['cgm'], bins = bins, label = 'cgm', alpha = 0.5, color='coral' )
-    ax[1].hist(progenitors['disk'], bins = bins, label = 'disk', alpha = 0.5, color='gold')
+    ax[0].hist(p1, bins = bins, alpha = 0.5, color='slateblue')
+    ax[1].hist(p2['cgm'], bins = bins, label = 'cgm', alpha = 0.5, color='coral' )
+    ax[1].hist(p2['disk'], bins = bins, label = 'disk', alpha = 0.5, color='gold')
 
     ax[0].semilogy()
     ax[1].semilogy()
@@ -90,11 +90,11 @@ def radial_dist_plot(particles, progenitors, out_fn):
     ax[1].set_title('z = 0.25')
     plt.savefig(out_fn+'radial_dist.pdf')
 
-def categorize_particles(particles, rdisk="15 kpc", height='5 kpc'):
+def categorize_p(p, rdisk="15 kpc", height='5 kpc'):
     '''filter particles in disk vs cgm'''
     disk_filt = pynbody.filt.Disc(rdisk, height, cen=(0,0,0))
-    cgm = particles[~disk_filt]
-    disk = particles[disk_filt]
+    cgm = p[~disk_filt]
+    disk = p[disk_filt]
 
     return cgm, disk
 
@@ -120,7 +120,7 @@ def make_sph_img(sim1_h1, sim2_h1, view, outfn):
     else:
         plt.savefig(outfn+'coolontime_sph_sideon.pdf')
 
-def make_scatter(particles, progenitors, qty, out_fn, z1, z2 qtyunits=None):
+def make_scatter(p1, p2, qty, out_fn, z1, z2, qtyunits=None):
 
     for plane in [['x','y'],['x','z']]:
         fig, axs = plt.subplots(ncols=2, sharey=True, figsize=(25,10))
@@ -131,14 +131,14 @@ def make_scatter(particles, progenitors, qty, out_fn, z1, z2 qtyunits=None):
 
 
         if qtyunits != None:
-            particles_plt = axs[0].scatter(particles.g[plane[0]].in_units('kpc'), particles.g[plane[1]].in_units('kpc'), c=particles.g[qty].in_units(qtyunits), s=5, vmin=particles.g[qty].min(), vmax=particles.g[qty].max())
-            progenitors_plt = axs[1].scatter(progenitors.g[plane[0]].in_units('kpc'), progenitors.g[plane[1]].in_units('kpc'),  c=progenitors.g[qty].in_units(qtyunits), s=5, vmin=particles.g[qty].min(), vmax=particles.g[qty].max())
+            p1_plt = axs[0].scatter(p1.g[plane[0]].in_units('kpc'), p1.g[plane[1]].in_units('kpc'), c=p1.g[qty].in_units(qtyunits), s=5, vmin=p1.g[qty].min(), vmax=p1.g[qty].max())
+            p2_plt = axs[1].scatter(p2.g[plane[0]].in_units('kpc'), p2.g[plane[1]].in_units('kpc'),  c=p2.g[qty].in_units(qtyunits), s=5, vmin=p1.g[qty].min(), vmax=p1.g[qty].max())
         else:
-            particles_plt = axs[0].scatter(particles.g[plane[0]].in_units('kpc'), particles.g[plane[1]].in_units('kpc'), c=particles.g[qty], s=5, vmin=particles.g[qty].min(), vmax=particles.g[qty].max())
-            progenitors_plt = axs[1].scatter(progenitors.g[plane[0]].in_units('kpc'), progenitors.g[plane[1]].in_units('kpc'),  c=progenitors.g[qty], s=5, vmin=particles.g[qty].min(), vmax=particles.g[qty].max())
+            p1_plt = axs[0].scatter(p1.g[plane[0]].in_units('kpc'), p1.g[plane[1]].in_units('kpc'), c=p1.g[qty], s=5, vmin=p1.g[qty].min(), vmax=p1.g[qty].max())
+            p2_plt = axs[1].scatter(p2.g[plane[0]].in_units('kpc'), p2.g[plane[1]].in_units('kpc'),  c=p2.g[qty], s=5, vmin=p1.g[qty].min(), vmax=p1.g[qty].max())
         
-        axs[0].set_title('z =', z1)
-        axs[1].set_title('z =', z2)
+        axs[0].set_title('z = '+ z1)
+        axs[1].set_title('z = '+ z2)
         
         axs[0].set_ylabel(plane[1] + ' [kpc]')
         axs[0].set_xlabel('x [kpc]')
@@ -148,9 +148,9 @@ def make_scatter(particles, progenitors, qty, out_fn, z1, z2 qtyunits=None):
         cax = plt.axes([0.85, 0.1, 0.02, 0.8])
 
         if qtyunits != None:    
-            plt.colorbar(particles_plt, cax=cax, label = qtyunits)
+            plt.colorbar(p1_plt, cax=cax, label = qtyunits)
         else:
-            plt.colorbar(particles_plt, cax=cax)
+            plt.colorbar(p1_plt, cax=cax, label=qty+' '+str(p1.g[qty].units))
 
         plt.savefig(out_fn+'scatter_'+plane[0]+plane[1]+'.pdf')
         print('scatter plot saved')
@@ -173,14 +173,14 @@ def velocity_plot(sim1_h1, sim2_h1,view, out_fn):
         plt.savefig(out_fn+'vel_sph_faceon.pdf')
 
 
-def vel_profile(particles, progenitors, out_fn,z1,z2):
+def vel_profile(p1, p2, out_fn,z1,z2):
     fig, ax = plt.subplots()
 
-    particles_p = profile.Profile(particles, vmin='0.1 kpc', vmax='280 kpc', ndim=3)
-    progenitors_p =  profile.Profile(progenitors, vmin='0.1 kpc', vmax='280 kpc', ndim=3)
+    p1_p = profile.Profile(p1, vmin='0.1 kpc', vmax='280 kpc', ndim=3)
+    p2_p =  profile.Profile(p2, vmin='0.1 kpc', vmax='280 kpc', ndim=3)
 
-    ax.plot(particles_p['rbins'], particles_p['vr'], label='z='+z1)
-    ax.plot(progenitors_p['rbins'], progenitors_p['vr'], label='z='+z2)
+    ax.plot(p1_p['rbins'], p1_p['vr'], label='z='+z1)
+    ax.plot(p2_p['rbins'], p2_p['vr'], label='z='+z2)
 
     ax.set_xlabel('r [kpc]')
     ax.set_ylabel('vr [km s**-1]')
