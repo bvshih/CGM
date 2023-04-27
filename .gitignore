@@ -130,3 +130,6 @@ dmypy.json
 
 # Simulation Folders
 GMs/
+
+# script outs
+batchjobs/script_outs/
