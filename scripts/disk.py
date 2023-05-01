@@ -6,49 +6,31 @@ import pynbody.plot.sph as sph
 
 import numpy as np
 
-def distance(x,y,z):
-    # coordinates should be from centered sim already 
-    return np.sqrt(x**2+y**2+z**2)
-
-def calculate_r(p):
-    r = [distance(*p['pos'][i]) for i in range(len(p))]
-    return r 
-    
 
 def radial_dist_plot(p, out_fn):
     ''' 
     radial distribution histogram
     p: sim snap of gas particles only
     '''
-    p_dict={}
+    print(len(p),' particles')
 
-    cgm, disk=categorize_p(p)
-    print('p separated into cgm and disk')
-
-    r = {}
-    print('calculating r for',len(p_dict['cgm']),'cgm particles')
-    r['cgm'] = cgm['r']
-
-    print('calculating r for',len(p_dict['disk']),'disk particles')
-    r['disk'] = disk['r']
-    print('calculated r')
-
+    cgm, disk = categorize_p(p)
     fig, ax = plt.subplots()
 
     rmax = 300
-    disk_height = 5
-    bins = np.linspace(0, rmax, num = int(rmax/disk_height))
+    bins = np.linspace(0, rmax, num = 100)
     print('making radial dist plot')
-    ax.hist(r['cgm'], bins = bins, label = 'cgm', alpha = 0.5, color='coral' )
-    ax.hist(r['disk'], bins = bins, label = 'disk', alpha = 0.5, color='gold')
+    ax.hist(cgm['r'], bins = bins, alpha = 0.5, label='cgm', color='coral' )
+    ax.hist(disk['r'], bins = bins, label = 'disk', alpha = 0.5, color='gold')
 
     ax.semilogy()
-    ax.legend()
     ax.set_xlabel('r [kpc]')
+    ax.set_ylim(1,3e4)
 
-    ax.set_title('z = 0.17')
+    ax.set_title('radial distribution of z = '+z2[i]+' disk particles in z = 0.17')
     plt.savefig(out_fn+'radial_dist.pdf')
     print('radial dist plot saved')
+    plt.clf()
 
 
 def categorize_p(p, rdisk="15 kpc", height='5 kpc'):
@@ -63,56 +45,62 @@ def categorize_p(p, rdisk="15 kpc", height='5 kpc'):
 # file path for sim
 s1_fn = '/scratch/08263/tg875625/CGM/GMs/pioneer50h243.1536gst1bwK1BH/pioneer50h243.1536gst1bwK1BH.003456'
 z1 = '0.17'
+
 # file path for previous timestep 
-s2_fn = '/scratch/08263/tg875625/CGM/GMs/pioneer50h243.1536gst1bwK1BH/pioneer50h243.1536gst1bwK1BH.003072'
-z2='0.29'
-out_fn = '/scratch/08263/tg875625/CGM/plots/disk_z'+z1+'_z'+z2+'_'
+s2_fn = '/scratch/08263/tg875625/CGM/GMs/pioneer50h243.1536gst1bwK1BH/pioneer50h243.1536gst1bwK1BH.00'
+ts_nums = ['3195','3072','2688','2554','2304', '1920', '1739']
+z2=['0.25','0.29','0.44','0.50','0.62','0.86', '1.00']
 
-# load previous timestep
-s2 = pynbody.load(s2_fn)
-s2.physical_units()
-
-h1_s2 = s2.halos()[1]
-
-pynbody.analysis.angmom.faceon(h1_s2)
-print('loaded and rotated s2')
-
-# filter
-rdisk = "15 kpc"
-height = "5 kpc"
-disk_filt = pynbody.filt.Disc(rdisk, height, cen=(0,0,0))  
-
-temp_filt = pynbody.filt.LowPass('temp', '1.2e4 K')
-
-amu = units.NamedUnit("amu", 1.66e-27*units.kg)
-h1_s2.g['rho'].convert_units('amu cm**-3')  # convert array to new units
-
-rho_filt = pynbody.filt.HighPass('rho', '0.1 amu cm**-3')
-
-# metals_filt = pynbody.filt.HighPass('metals', 0.0134)
-
-# cool dense gas in disk of previous timestep
-d1_s2 = h1_s2.g[disk_filt & temp_filt & rho_filt]
-print('filtered s2')
-
-# load sim 2
+# load sim 1
 s1 = pynbody.load(s1_fn)
 s1.physical_units()
-
+print('s1 loaded')
 h1_s1 = s1.halos()[1]
 
 pynbody.analysis.angmom.faceon(h1_s1)
-print('loaded and rotated s1')
+print('s1 centered and rotated')
 
-# bridge 
-b = s1.bridge(s2)
-print('briged')
+amu = units.NamedUnit("amu", 1.66e-27*units.kg)
 
-# cool dense gas disk particles from sim 2 in sim 1 
-d1_s1 = b(d1_s2)
 
-# radial dist plot 
-radial_dist_plot(d1_s1.g, out_fn)
+for i in range(len(ts_nums)):
+    out_fn = '/scratch/08263/tg875625/CGM/plots/disk_z'+z1+'_z'+z2[i]+'_'
+
+    # load previous timestep
+    s2 = pynbody.load(s2_fn+ts_nums[i])
+    s2.physical_units()
+    print('s2 loaded')
+    h1_s2 = s2.halos()[1]
+
+    pynbody.analysis.angmom.faceon(h1_s2)
+    print('s2 centered rotated')
+
+    # filter
+    rdisk = "15 kpc"
+    height = "5 kpc"
+    disk_filt = pynbody.filt.Disc(rdisk, height, cen=(0,0,0))  
+
+    temp_filt = pynbody.filt.LowPass('temp', '1.2e4 K')
+
+    h1_s2.g['rho'].convert_units('amu cm**-3')  # convert array to new units
+
+    rho_filt = pynbody.filt.HighPass('rho', '0.1 amu cm**-3')
+
+    # metals_filt = pynbody.filt.HighPass('metals', 0.0134)
+
+    # cool dense gas in disk of previous timestep
+    d1_s2 = h1_s2.g[disk_filt & temp_filt & rho_filt]
+    print('filtered s2')
+
+    # bridge 
+    b = s1.bridge(s2)
+    print('briged')
+
+    # cool dense gas disk particles from sim 2 in sim 1 
+    d1_s1 = b(d1_s2)
+
+    # radial dist plot 
+    radial_dist_plot(d1_s1.g, out_fn)
 
 # s1_min = min(d1_s1.g['rho'])
 # s1_max = max(d1_s1.g['rho'])  
