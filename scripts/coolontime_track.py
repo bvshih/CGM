@@ -57,16 +57,7 @@ def get_p1(sim1_fn, sim2_fn, return_halos=True, return_sim=True):
 
     return (*results,) # maybe i should return it as a dictionary...
 
-
-def distance(x,y,z):
-    # coordinates should be from centered sim already 
-    return np.sqrt(x**2+y**2+z**2)
-
-def calculate_r(p1):
-    r = [distance(p1['x'][i], p1['y'][i], p1['z'][i]) for i in range(len(p1))]
-    return r 
     
-
 def radial_dist_plot(p1, p2, out_fn):
     fig, ax = plt.subplots(2)
 
@@ -152,7 +143,7 @@ def make_scatter(p1, p2, qty, out_fn, z1, z2, qtyunits=None):
         else:
             plt.colorbar(p1_plt, cax=cax, label=qty+' '+str(p1.g[qty].units))
 
-        plt.savefig(out_fn+'scatter_'+plane[0]+plane[1]+'.pdf')
+        plt.savefig(out_fn+qty+'_scatter_'+plane[0]+plane[1]+'.pdf')
         print('scatter plot saved')
 
 
