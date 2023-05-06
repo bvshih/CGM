@@ -27,7 +27,7 @@ def radial_dist_plot(p, out_fn,z):
 
     ax.semilogy()
     ax.set_xlabel('r [kpc]')
-    ax.set_ylim(1,3e4)
+    ax.set_ylim(top=3e4)
     ax.legend()
 
     ax.set_title('radial distribution of z = '+z+' disk particles in z = 0.17')
@@ -87,7 +87,9 @@ def vel_profile(p1, p2, out_fn,z1,z2):
     print('velocity profile saved')
     
 # create sph img 
-sph_img = False 
+sph_img = False
+radialplots=False
+scatterplots=True 
 
 # file path for sim
 s1_fn = '/scratch/08263/tg875625/CGM/GMs/pioneer50h243.1536gst1bwK1BH/pioneer50h243.1536gst1bwK1BH.003456'
@@ -95,10 +97,10 @@ z1 = '0.17'
 
 # file path for previous timestep 
 s2_fn = '/scratch/08263/tg875625/CGM/GMs/pioneer50h243.1536gst1bwK1BH/pioneer50h243.1536gst1bwK1BH.00'
-# ts_nums = ['3195','3072','2688','2554','2304', '1920', '1739']
-# z2=['0.25','0.29','0.44','0.50','0.62','0.86', '1.00']
-ts_nums = ['1920']
-z2 = ['0.86']
+ts_nums = ['3195','3072','2688','2554','2304', '1920', '1739']
+z2=['0.25','0.29','0.44','0.50','0.62','0.86', '1.00']
+# ts_nums = ['1920']
+# z2 = ['0.86']
 
 # load sim 1
 s1 = pynbody.load(s1_fn)
@@ -112,7 +114,7 @@ print('s1 centered and rotated')
 amu = units.NamedUnit("amu", 1.66e-27*units.kg)
 
 for i in range(len(ts_nums)):
-    out_fn = '/scratch/08263/tg875625/CGM/plots/disk_z'+z1+'_z'+z2[i]+'_'
+    out_fn = '/scratch/08263/tg875625/CGM/plots/notempcut_disk_z'+z1+'_z'+z2[i]+'_'
 
     # load previous timestep
     s2 = pynbody.load(s2_fn+ts_nums[i])
@@ -130,14 +132,14 @@ for i in range(len(ts_nums)):
 
     temp_filt = pynbody.filt.LowPass('temp', '1.2e4 K')
 
-    h1_s2.g['rho'].convert_units('amu cm**-3')  # convert array to new units
+    h1_s2.g['rho'].convert_units('amu cm**-3')  # convert density array to new units
 
     rho_filt = pynbody.filt.HighPass('rho', '0.1 amu cm**-3')
 
     # metals_filt = pynbody.filt.HighPass('metals', 0.0134)
 
     # cool dense gas in disk of previous timestep
-    d1_s2 = h1_s2.g[rho_filt & temp_filt & disk_filt]
+    d1_s2 = h1_s2.g[rho_filt]
     print('filtered s2')
 
     # bridge 
@@ -148,16 +150,16 @@ for i in range(len(ts_nums)):
     d1_s1 = b(d1_s2)
 
     # radial dist plot 
-    radial_dist_plot(d1_s1.g, out_fn, z2[i])
+    if radialplots:
+        radial_dist_plot(d1_s1.g, out_fn, z2[i])
 
     #vel_profile(d1_s1.g, d1_s2.g, out_fn, z1, z2[i])
     
-    #qtys = ['metals', 'coolontime', 'vr']
+    if scatterplots:
+        qtys = ['metals', 'coolontime', 'vr']
 
-    # for qty in qtys:
-    #     dist_plot(d1_s1.g, qty, out_fn, z2[i])
-    
-    #     coolontime_track.make_scatter(d1_s1, d1_s2, qty, out_fn, z1, z2[i])
+        for qty in qtys:        
+            coolontime_track.make_scatter(d1_s1, d1_s2, qty, out_fn, z1, z2[i])
 
 if sph_img: 
     s1_min = min(d1_s1.g['rho'])

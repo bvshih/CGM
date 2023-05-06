@@ -113,38 +113,42 @@ def make_sph_img(sim1_h1, sim2_h1, view, outfn):
 
 def make_scatter(p1, p2, qty, out_fn, z1, z2, qtyunits=None):
 
-    for plane in [['x','y'],['x','z']]:
-        fig, axs = plt.subplots(ncols=2, sharey=True, figsize=(25,10))
+    fig, axs = plt.subplots(ncols=2, nrows=2, figsize=(12.5,10))
 
-        for ax in axs:
-            ax.set_xlim(-300,300)
-            ax.set_ylim(-300,300)
+    for ax in axs:
+        for i in range(len(ax)):
+            ax[i].set_xlim(-300,300)
+            ax[i].set_ylim(-300,300)
 
+    plane = [['x','y'],['x','z']]
+    for i in range(len(plane)):
 
         if qtyunits != None:
-            p1_plt = axs[0].scatter(p1.g[plane[0]].in_units('kpc'), p1.g[plane[1]].in_units('kpc'), c=p1.g[qty].in_units(qtyunits), s=5, vmin=p1.g[qty].min(), vmax=p1.g[qty].max())
-            p2_plt = axs[1].scatter(p2.g[plane[0]].in_units('kpc'), p2.g[plane[1]].in_units('kpc'),  c=p2.g[qty].in_units(qtyunits), s=5, vmin=p1.g[qty].min(), vmax=p1.g[qty].max())
+            p1_plt = axs[i,0].scatter(p1.g[plane[i][0]].in_units('kpc'), p1.g[plane[i][1]].in_units('kpc'), c=p1.g[qty].in_units(qtyunits), s=2, vmin=p1.g[qty].in_units(qtyunits).min(), vmax=p1.g[qty].in_units(qtyunits).max(), alpha = 0.5)
+            axs[i,1].scatter(p2.g[plane[i][0]].in_units('kpc'), p2.g[plane[i][1]].in_units('kpc'),  c=p2.g[qty].in_units(qtyunits), s=2, vmin=p1.g[qty].in_units(qtyunits).min(), vmax=p1.g[qty].in_units(qtyunits).max(), alpha = 0.)
         else:
-            p1_plt = axs[0].scatter(p1.g[plane[0]].in_units('kpc'), p1.g[plane[1]].in_units('kpc'), c=p1.g[qty], s=5, vmin=p1.g[qty].min(), vmax=p1.g[qty].max())
-            p2_plt = axs[1].scatter(p2.g[plane[0]].in_units('kpc'), p2.g[plane[1]].in_units('kpc'),  c=p2.g[qty], s=5, vmin=p1.g[qty].min(), vmax=p1.g[qty].max())
-        
-        axs[0].set_title('z = '+ z1)
-        axs[1].set_title('z = '+ z2)
-        
-        axs[0].set_ylabel(plane[1] + ' [kpc]')
-        axs[0].set_xlabel('x [kpc]')
-        axs[1].set_xlabel('x [kpc]')
+            p1_plt = axs[i,0].scatter(p1.g[plane[i][0]].in_units('kpc'), p1.g[plane[i][1]].in_units('kpc'), c=p1.g[qty], s=2, vmin=p1.g[qty].min(), vmax=p1.g[qty].max(), alpha = 0.5)
+            axs[i,1].scatter(p2.g[plane[i][0]].in_units('kpc'), p2.g[plane[i][1]].in_units('kpc'),  c=p2.g[qty], s=2, vmin=p1.g[qty].min(), vmax=p1.g[qty].max(), alpha = 0.5)
 
-        plt.subplots_adjust(right=0.8)
-        cax = plt.axes([0.85, 0.1, 0.02, 0.8])
+        axs[i,0].set_ylabel(plane[i][1] + ' [kpc]')
+        axs[i,1].set_ylabel(plane[i][1] + ' [kpc]')
 
-        if qtyunits != None:    
-            plt.colorbar(p1_plt, cax=cax, label = qtyunits)
-        else:
-            plt.colorbar(p1_plt, cax=cax, label=qty+' '+str(p1.g[qty].units))
+    axs[1,0].set_xlabel('x [kpc]')
+    axs[1,1].set_xlabel('x [kpc]')
+    axs[0,0].text(200,280,'z = '+ z1)
+    axs[0,1].text(200,280,'z = '+ z2)
 
-        plt.savefig(out_fn+qty+'_scatter_'+plane[0]+plane[1]+'.pdf')
-        print('scatter plot saved')
+    # colorbar
+    plt.subplots_adjust(right=0.8)
+    cax = plt.axes([0.85, 0.15, 0.03, 0.7])
+
+    if qtyunits != None:    
+        plt.colorbar(p1_plt, cax=cax, label = qty+' ' +qtyunits, ticklocation='right')
+    else:
+        plt.colorbar(p1_plt, cax=cax, label=qty+' '+str(p1.g[qty].units), ticklocation='right')
+    
+    plt.savefig(out_fn+qty+'_scatter.pdf')
+    print('scatter plot saved')
 
 
 def velocity_plot(sim1_h1, sim2_h1,view, out_fn):
