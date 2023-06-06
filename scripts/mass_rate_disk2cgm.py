@@ -1,26 +1,21 @@
-# calculates the rate of mass lost from disk to CGM using radial profile
+# calculates the rate of mass lost from disk to CGM 
+# plots the flux profile of cgm particles
 
 import pynbody
 import pynbody.analysis.profile as profile
 
 import numpy as np
 
-def calculate_rate(p):
-    p_profile = profile.Profile(p.g, rmin='0.1 kpc', rmax='300 kpc', ndim=3)
-
-    rate = p_profile['vr'].in_units('kpc s**-1')*p_profile['mass'].in_units('Msol')/p_profile['rbins'].in_units('kpc')
-
-    return np.mean(rate)
-
+import matplotlib.pyplot as plt
 
 fn = '/scratch/08263/tg875625/CGM/GMs/pioneer50h243.1536gst1bwK1BH/pioneer50h243.1536gst1bwK1BH.00'
 ts_nums =['3456','3195','3072','2688','2554','2304','1920']
 z = ['0.17','0.25','0.29','0.44','0.50','0.62', '0.86']
 
-out_fn = '/scratch/08263/tg875625/CGM/datfiles/mass_rate.dat'
+# ts_nums =['2304','1920']
+# z = ['0.62', '0.86']
 
-with open(out_fn, 'w') as outfile:
-    outfile.write('z1 z2 rate[Msol/s]\n')
+out_fn = '/scratch/08263/tg875625/CGM/plots/disk2cgm_mass_rate_profile_symlog.pdf'
 
 ts_nums.reverse()
 z.reverse()
@@ -47,6 +42,7 @@ rdisk = "15 kpc"
 height = "5 kpc" # height is from midplane
 disk = pynbody.filt.Disc(rdisk, height, cen=(0,0,0))  
 
+p_profile = []
 for i in range(len(ts_nums)-1):
     print(f'tracking dense particles from z = {z[i]}')
     
@@ -60,10 +56,20 @@ for i in range(len(ts_nums)-1):
     # filter out particles still in disk 
     p[1].g[~disk]
 
-    p[1].g['vr'].convert_units('kpc s**-1')
     p[1].g['mass'].convert_units('Msol')
+    p[1].g['vr'].convert_units('kpc s**-1')
 
-    calculate_rate(p[1])
+    p_profile.append(profile.Profile(p[1].g, rmax='280 kpc', ndim=3))
+print('plotting rate profiles')
 
-    with open(out_fn, 'a') as outfile:
-        outfile.write(f"{z[i]} {z[i+1]} {calculate_rate(p[1]):.4f}")
+for i in range(len(p_profile)):
+    print('plotting z=', z[i])
+    rate = np.nanmean(p_profile[i]['vr'].in_units('kpc yr**-1'))*p_profile[i]['mass'].in_units('Msol')/p_profile[i]['rbins'].in_units('kpc')
+    plt.plot(p_profile[i]['rbins'], rate,  label = f'{t[i+1]} Gyr')
+    plt.yscale('symlog', linthresh=0.1)
+
+plt.legend()
+plt.xlabel(f"r [kpc]")
+plt.ylabel(f"rate [Msol yr**-1]")
+
+plt.savefig(out_fn)

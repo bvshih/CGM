@@ -5,7 +5,7 @@ import pynbody.plot.sph as sph
 
 def sph_img(s, h1, z, t, outfn):
     
-    vmin = 1e-6
+    vmin = 1e-5
     vmax = 1e0
 
     fig, ax = plt.subplots(ncols=2, sharey=True,figsize=(20,10))
@@ -47,7 +47,10 @@ fn = '/scratch/08263/tg875625/CGM/GMs/pioneer50h243.1536gst1bwK1BH/pioneer50h243
 ts_nums =['3456','3195','3072','2688','2554','2304','1920']
 z = ['0.17','0.25','0.29','0.44','0.50','0.62', '0.86']
 
-outfn = '/scratch/08263/tg875625/CGM/plots/tracking_gas_'
+# ts_nums = ['0972','1152','1536','1739']
+#z = ['','','','1.00']
+
+outfn = '/scratch/08263/tg875625/CGM/plots/tracking_gas/tracking_gas_'
 
 ts_nums.reverse()
 z.reverse()

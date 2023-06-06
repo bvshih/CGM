@@ -5,6 +5,30 @@ import seaborn as sns
 import SeabornFig2Grid as sfg
 import matplotlib.gridspec as gridspec
 
+def phase_2dhist(p, outfn, z1, z2, t1, t2, phasex='rho', phasey='temp'):
+    fig, ax = plt.subplots(ncols=2,sharex=True, sharey=True, figsize=(20,12))
+    plt.subplots_adjust(bottom=0.2)
+
+    title = [f'All particles in disk\n z = {z1} t = {t1}', f'Particles no longer in disk\n z = {z2} t = {t2}']
+    
+    xbins = np.logspace(np.log10(1e3),np.log10(1e9), 50)
+    ybins = np.logspace(np.log10(1e3),np.log10(1e8), 50)
+
+    colorbar_pos = [[0.1, 0.1, 0.35, 0.05], [0.55, 0.1, 0.35, 0.05]]
+
+    for i in range(len(p)):
+        ax[i].loglog()  
+        img = ax[i].hist2d(p[i].g[phasex], p[i].g[phasey], bins = [xbins,ybins])
+        ax[i].set_title(title[i])
+
+        ax[i].set_xlabel(f"{phasex} [{p[i].g[phasex].units}]")
+        ax[i].set_ylabel(f"{phasey} [{p[i].g[phasey].units}]")
+
+        cax = plt.axes(colorbar_pos[i])
+
+        plt.colorbar(img[3], cax=cax, orientation='horizontal')
+
+    plt.savefig(outfn)
 def phase_diagram(p, outfn, z1, z2,t1, t2, phasex='rho', phasey='temp'):
     fig, ax = plt.subplots(ncols=2,sharex=True, sharey=True, figsize=(20,10))
 
@@ -37,19 +61,19 @@ def sns_phase_diagram(p, z,t, phasex='rho', phasey='temp'):
     # ax.set_yscale('log')
 
     return g 
-plot_phase_diagram = True
+plot_phase_diagram = False
 plot_sns_diagram = False
-
+plot_2dhist = True
 
 fn = '/scratch/08263/tg875625/CGM/GMs/pioneer50h243.1536gst1bwK1BH/pioneer50h243.1536gst1bwK1BH.00'
 
 out_fn = '/scratch/08263/tg875625/CGM/plots/'
 
-# ts_nums =['3456','3195','3072','2688','2554','2304','1920']
-# z = ['0.17','0.25','0.29','0.44','0.50','0.62', '0.86']
+ts_nums =['3456','3195','3072','2688','2554','2304','1920']
+z = ['0.17','0.25','0.29','0.44','0.50','0.62', '0.86']
 
-ts_nums =['2304','1920']
-z = ['0.62', '0.86']
+# ts_nums =['2304','1920']
+# z = ['0.62', '0.86']
 
 ts_nums.reverse()
 z.reverse()
@@ -93,6 +117,8 @@ for i in range(len(ts_nums)-1):
 
     if plot_phase_diagram:
         phase_diagram(p_i ,out_fn+'z'+z[i]+'_z'+z[i+1]+'_phase_plot_r.pdf', z[i], z[i+1],t[i], t[i+1])
+    if plot_2dhist:
+        phase_2dhist(p_i, out_fn+'z'+z[i]+'_z'+z[i+1]+'_phase_2dhist_50.pdf',z[i], z[i+1],t[i], t[i+1]) 
     if plot_sns_diagram:
         p.append(p_i)
 
